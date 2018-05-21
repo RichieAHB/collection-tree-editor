@@ -1,6 +1,8 @@
 const model = {
   fronts: {
     1: {
+      id: 1,
+      title: 'Front 1',
       collections: [1]
     }
   },

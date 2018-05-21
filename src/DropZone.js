@@ -8,7 +8,7 @@ class DropZone extends React.Component {
         onDragOver={e => e.preventDefault()}
         onDrop={this.props.onDrop}
       >
-        Drop here!
+        {this.props.children}
       </div>
     );
   }

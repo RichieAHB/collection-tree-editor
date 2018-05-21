@@ -1,9 +1,27 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
+import Collection from './Collection';
 import model from './model';
 
 ReactDOM.render(
-  <App normalizedData={model} frontId={1} />,
+  <Collection
+    normalizedData={model}
+    rootKey="fronts"
+    rootId={1}
+    structure={[
+      {
+        childrenKey: 'collections',
+        modelKey: 'collections'
+      },
+      {
+        childrenKey: 'articleFragments',
+        modelKey: 'articleFragments'
+      },
+      {
+        childrenKey: 'supporting',
+        modelKey: 'articleFragments'
+      }
+    ]}
+  />,
   document.getElementById('root')
 );
