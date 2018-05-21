@@ -19,28 +19,34 @@ const buildTree = (entities, rootType, rootId, structure) => {
   return buildNode(entities, rootType, rootId, structure);
 };
 
+const pathSpec = (key, index, type) => ({
+  key,
+  index,
+  type
+});
+
 const findAtPath = (obj, path) =>
-  path.reduce((o, [key, index]) => o[key][index], obj);
+  path.reduce((o, { key, index }) => o[key][index], obj);
 
 const isSubPath = (parent, sub) =>
   sub.length > parent.length &&
-  !parent.some(([kp, ip], i) => {
-    const [ks, is] = sub[i] || [];
+  !parent.some(({ key: kp, index: ip }, i) => {
+    const { key: ks, index: is } = sub[i] || [];
     return kp !== ks || ip !== is;
   });
 
 const pathForMove = (source, target) => {
-  return target.map(([kt, it], i) => {
-
+  return target.map((targetPathSpec, i) => {
+    const { key: kt, index: it, type: tt } = targetPathSpec;
     if (i === source.length - 1) {
-      const [ks, is] = source[i];
+      const { key: ks, index: is } = source[i];
 
       if (ks === kt && is < it) {
-        return [kt, it - 1];
+        return pathSpec(kt, it - 1, tt);
       }
     }
-    return [kt, it];
+    return targetPathSpec;
   });
 };
 
-export { buildTree, findAtPath, isSubPath, pathForMove };
+export { buildTree, findAtPath, isSubPath, pathForMove, pathSpec };

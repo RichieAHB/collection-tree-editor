@@ -1,26 +1,27 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Collection from './Collection';
+import App from './App';
 import model from './model';
 
+const el = (
+  childrenType,
+  childrenKey = `${childrenType}s`,
+  modelKey = `${childrenType}s`
+) => ({
+  childrenType,
+  modelKey,
+  childrenKey
+});
+
 ReactDOM.render(
-  <Collection
+  <App
     normalizedData={model}
     rootKey="fronts"
     rootId={1}
     structure={[
-      {
-        childrenKey: 'collections',
-        modelKey: 'collections'
-      },
-      {
-        childrenKey: 'articleFragments',
-        modelKey: 'articleFragments'
-      },
-      {
-        childrenKey: 'supporting',
-        modelKey: 'articleFragments'
-      }
+      el('collection'),
+      el('articleFragment'),
+      el('articleFragment', 'supporting')
     ]}
   />,
   document.getElementById('root')

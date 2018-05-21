@@ -1,12 +1,7 @@
 import React from 'react';
 import produce from 'immer';
 import Node from './Node';
-import {
-  findAtPath,
-  isSubPath,
-  buildTree,
-  pathForMove
-} from './utils/TreeUtils';
+import { findAtPath, isSubPath, pathForMove } from './utils/TreeUtils';
 
 class Collection extends React.Component {
   state = {
@@ -14,26 +9,24 @@ class Collection extends React.Component {
     draftTree: null
   };
 
-  constructor(props) {
-    super(props);
-    const { normalizedData, rootId, rootKey, structure } = this.props;
-    this.state = {
-      tree: buildTree(normalizedData, rootKey, rootId, structure)
-    };
-  }
+  static getDerivedStateFromProps = ({ tree }) => ({
+    tree
+  });
 
   detach = path => () => {
-    const tree = produce(this.state.tree, draftTree => {
-      const newPath = path.slice();
-      const [key, index] = newPath.pop();
-      const parent = findAtPath(draftTree, newPath);
-      parent[key].splice(index, 1);
-    });
-
-    this.setState({
-      draftTree: tree,
-      didDrop: true
-    });
+    try {
+      const tree = produce(this.state.tree, draftTree => {
+        const newPath = path.slice();
+        const { key, index } = newPath.pop();
+        const parent = findAtPath(draftTree, newPath);
+        parent[key].splice(index, 1);
+      });
+      this.setState({
+        draftTree: tree
+      });
+    } catch (e) {
+      console.log(`Couldn't detach: ${e.message}`);
+    }
   };
 
   attach = path => e => {
@@ -42,57 +35,76 @@ class Collection extends React.Component {
     try {
       json = JSON.parse(e.dataTransfer.getData('data'));
     } catch (e) {
+      console.log(`error parsing the drag data`);
       return;
     }
 
-    const { data, path: sourcePath } = json;
+    const { data, path: sourcePath, type } = json;
 
     if (isSubPath(sourcePath, path)) {
+      console.log(`can't drop into itself`);
       return;
     }
 
-    // this could probably just be draft tree
-    const tree = produce(this.state.draftTree || this.state.tree, draftTree => {
-      const newPath = pathForMove(sourcePath, path);
-      console.log(newPath);
-      const [key, index] = newPath.pop();
-      const parent = findAtPath(draftTree, newPath);
-      parent[key].splice(index, 0, data);
-    });
+    const allowedType = path[path.length - 1].type;
 
-    this.setState({
-      tree,
-      didDrop: true
-    });
+    if (type !== allowedType) {
+      console.log(`can't drop ${type}, expecting ${allowedType}`);
+      return;
+    }
+
+    const edits = [];
+
+    // check whether the type being dropped suits the place it's being dropped
+
+    try {
+      // this could probably just be draft tree
+      const tree = produce(
+        this.state.draftTree || this.state.tree,
+        draftTree => {
+          const newPath = pathForMove(sourcePath, path);
+          const { key, index } = newPath.pop();
+          const parent = findAtPath(draftTree, newPath);
+          parent[key].splice(index, 0, data);
+
+          // TODO: build this stuff out
+          edits.push({
+            type: 'MOVE',
+            data
+          });
+
+          // dedupe
+          // flatten
+        }
+      );
+
+      this.props.onChange(tree);
+    } catch (e) {
+      console.log(`Couldn't attach: ${e.message}`);
+    }
   };
 
   onDragEnd = () => {
-    if (!this.state.didDrop) {
-      this.setState({
-        draftTree: null,
-        tree: this.state.draftTree || this.state.tree,
-        didDrop: false
-      });
-    } else {
-      this.setState({
-        didDrop: false
-      });
-    }
+    this.setState({
+      draftTree: null
+    });
   };
 
   render() {
     const { attach, detach, onDragEnd } = this;
-    const { structure } = this.props;
+    const { structure, renderers } = this.props;
     const { tree } = this.state;
 
     return (
       <div onDragEnd={onDragEnd}>
         <Node
           node={tree}
-          structure={structure}
+          type="root"
+          path={[]}
           attach={attach}
           detach={detach}
-          path={[]}
+          renderers={renderers}
+          structure={structure}
         />
       </div>
     );

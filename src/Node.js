@@ -1,71 +1,42 @@
 import * as React from 'react';
-import DragZone from './DragZone';
-import DropZone from './DropZone';
-
-const Indent = ({ children }) => (
-  <div style={{ marginLeft: '10px' }}>{children}</div>
-);
-
-const ChildDropZone = ({
-  path,
-  attach,
-  structure,
-  childrenKey,
-  modelKey,
-  index
-}) =>
-  path.length <= structure.length + 2 && (
-    <DropZone onDrop={attach([...path, [childrenKey, index]])}>
-      Drop {modelKey}
-    </DropZone>
-  );
+import { pathSpec } from './utils/TreeUtils';
 
 const Node = ({
   node,
-  path = [],
+  type,
+  path,
   attach,
   detach,
-  structure: [{ childrenKey, modelKey } = {}, ...structure]
+  renderers,
+  structure: [{ childrenKey, childrenType } = {}, ...structure]
 }) => (
   <React.Fragment>
-    <DragZone
-      onDragStart={detach(path)}
-      data={{
+    {renderers[type]({
+      node,
+      onDragStart: detach(path),
+      dragData: {
         data: node,
+        type: type,
         path
-      }}
-    >
-      {node.title}
-    </DragZone>
-    <Indent>
-      {(node[childrenKey] || []).map((child, i) => (
-        <React.Fragment key={child.id}>
-          <ChildDropZone
-            path={path}
-            structure={structure}
-            childrenKey={childrenKey}
-            modelKey={modelKey}
-            attach={attach}
-            index={i}
-          />
-          <Node
-            node={child}
-            path={[...path, [childrenKey, i]]}
-            attach={attach}
-            detach={detach}
-            structure={structure}
-          />
-        </React.Fragment>
-      ))}
-      <ChildDropZone
-        path={path}
-        structure={structure}
-        childrenKey={childrenKey}
-        modelKey={modelKey}
-        attach={attach}
-        index={(node[childrenKey] || []).length}
-      />
-    </Indent>
+      },
+      onChildDrop: i => attach([...path, pathSpec(childrenKey, i, childrenType)]),
+      canDrag: path.length > 0,
+      canDrop: path.length <= structure.length + 2,
+      parentType: type,
+      allowedType: childrenType,
+      children: (node[childrenKey] || []).map((child, i) => (
+        <Node
+          key={child.id}
+          node={child}
+          type={childrenType}
+          path={[...path, pathSpec(childrenKey, i, childrenType)]}
+          attach={attach}
+          detach={detach}
+          renderers={renderers}
+          structure={structure}
+        />
+      ))
+    })}
   </React.Fragment>
 );
 
