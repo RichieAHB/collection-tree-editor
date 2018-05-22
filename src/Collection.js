@@ -3,7 +3,7 @@ import produce from 'immer';
 import Node from './Node';
 import { isSubPath } from './utils/PathUtils';
 import { insert, remove, dedupe } from './utils/TreeUtils';
-import { INTERNAL_TRANSFER_TYPE } from './constants';
+import { INTERNAL_TRANSFER_TYPE } from './Constants';
 
 class Collection extends React.Component {
   state = {
@@ -15,17 +15,10 @@ class Collection extends React.Component {
     tree
   });
 
-  detach = path => () => {
-    try {
-      const tree = produce(this.state.tree, draftTree => {
-        remove(draftTree, null, path)
-      });
-      this.setState({
-        draftTree: tree
-      });
-    } catch (e) {
-      console.log(`Couldn't detach: ${e.message}`);
-    }
+  onDragEnd = () => {
+    this.setState({
+      draftTree: null
+    });
   };
 
   get dropMappers() {
@@ -36,11 +29,24 @@ class Collection extends React.Component {
   }
 
   async getDropData(e) {
-    const [type, mapper] = Object.entries(this.dropMappers).find(
-      ([type, mapper]) => e.dataTransfer.getData(type)
+    const [type, mapper] = Object.entries(this.dropMappers).find(([t]) =>
+      e.dataTransfer.getData(t)
     );
     return mapper(e.dataTransfer.getData(type));
   }
+
+  detach = path => () => {
+    try {
+      const tree = produce(this.state.tree, draftTree => {
+        remove(draftTree, null, path);
+      });
+      this.setState({
+        draftTree: tree
+      });
+    } catch (e) {
+      console.log(`Couldn't detach: ${e.message}`);
+    }
+  };
 
   attach = path => async e => {
     e.preventDefault();
@@ -48,7 +54,7 @@ class Collection extends React.Component {
 
     try {
       spec = await this.getDropData(e);
-    } catch (e) {
+    } catch (error) {
       console.log(`error parsing the drag data`);
       return;
     }
@@ -88,15 +94,9 @@ class Collection extends React.Component {
       console.log(JSON.stringify(edits));
 
       this.props.onChange(tree, edits);
-    } catch (e) {
+    } catch (error) {
       console.log(`Couldn't attach: ${e.message}`);
     }
-  };
-
-  onDragEnd = () => {
-    this.setState({
-      draftTree: null
-    });
   };
 
   render() {

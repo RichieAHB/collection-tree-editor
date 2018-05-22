@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { el } from './utils/TreeUtils';
+import { el } from './lib';
 import model from './model';
 
 ReactDOM.render(

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { pathSpec } from './utils/PathUtils';
-import { INTERNAL_TRANSFER_TYPE } from './constants';
+import { INTERNAL_TRANSFER_TYPE } from './Constants';
 
 const Node = ({
   node,
@@ -18,10 +18,11 @@ const Node = ({
       dragType: INTERNAL_TRANSFER_TYPE,
       dragData: {
         data: node,
-        type: type,
+        type,
         path
       },
-      onChildDrop: i => attach([...path, pathSpec(childrenKey, i, childrenType)]),
+      onChildDrop: i =>
+        attach([...path, pathSpec(childrenKey, i, childrenType)]),
       canDrag: path.length > 0,
       canDrop: path.length <= structure.length + 2,
       parentType: type,

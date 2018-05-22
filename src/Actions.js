@@ -15,7 +15,4 @@ const remove = (id, type) => ({
   }
 });
 
-export {
-  insert,
-  remove
-};
+export { insert, remove };

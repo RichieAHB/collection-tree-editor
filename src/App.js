@@ -1,8 +1,6 @@
 import * as React from 'react';
-import Collection from './Collection';
-import RenderNode from './RenderNode';
+import { Collection, RenderNode, buildTree } from './lib';
 import DragZone from './DragZone';
-import { buildTree } from './utils/TreeUtils';
 
 import capiQuery from './capi';
 
@@ -25,8 +23,6 @@ const isGuardianURL = url => {
 
 const urlToArticle = async text => {
   const { id } = isGuardianURL(text);
-
-  console.log(id);
 
   return (
     !!id && {
@@ -65,9 +61,11 @@ class App extends React.Component {
           onChange={this.handleChange}
           renderers={{
             // these don't have to be the same component
-            root: props => <RenderNode {...props} />,
-            collection: props => <RenderNode {...props} />,
-            articleFragment: props => <RenderNode {...props} />
+            root: props => <RenderNode titleKey="webTitle" {...props} />,
+            collection: props => <RenderNode titleKey="webTitle" {...props} />,
+            articleFragment: props => (
+              <RenderNode titleKey="webTitle" {...props} />
+            )
           }}
           dropMappers={{
             text: text => urlToArticle(text)

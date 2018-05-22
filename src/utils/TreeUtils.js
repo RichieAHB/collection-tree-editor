@@ -1,7 +1,7 @@
 import * as Actions from '../Actions';
 import { pathSpec, findAtPath, pathForMove } from './PathUtils';
 
-const buildTree = (entities, rootType, rootId, structure) => {
+const buildTree = (_entities, rootType, rootId, _structure) => {
   const buildNode = (entities, nodeType, nodeId, [childSpec, ...structure]) => {
     const node = entities[nodeType][nodeId];
 
@@ -19,7 +19,7 @@ const buildTree = (entities, rootType, rootId, structure) => {
     };
   };
 
-  return buildNode(entities, rootType, rootId, structure);
+  return buildNode(_entities, rootType, rootId, _structure);
 };
 
 const el = (
@@ -32,7 +32,7 @@ const el = (
   childrenKey
 });
 
-const walkTree = structure =>
+const walkTree = _structure =>
   function*(tree) {
     function* walk(
       node,
@@ -54,16 +54,14 @@ const walkTree = structure =>
 
         // if we deleted (mutation) then the item at this index is not the next
         // item
-        if (didDelete) {
-          continue;
+        if (!didDelete) {
+          yield* walk(child, structure, childPath);
+          i += 1;
         }
-
-        yield* walk(child, structure, childPath);
-        i++;
       }
     }
 
-    yield* walk(tree, structure);
+    yield* walk(tree, _structure);
   };
 
 const insert = (tree, sourcePath, path, data, type) => {
@@ -102,7 +100,7 @@ const dedupe = (tree, structure, newNode = false, newNodeType = null) => {
       (node !== newNode && node.id === newNode.id && type === newNodeType) ||
       seen[type].indexOf(node.id) > -1
     ) {
-      console.log(node)
+      console.log(node);
       edits.push(remove(tree, null, path, node.id, type));
       didDelete = true;
     } else {

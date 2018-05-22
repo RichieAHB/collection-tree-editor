@@ -16,12 +16,13 @@ const RenderNode = ({
   canDrag,
   canDrop,
   parentType,
-  allowedType
+  allowedType,
+  titleKey = 'title'
 }) => (
   <div>
     {canDrag && (
       <DragZone json onDragStart={onDragStart} type={dragType} data={dragData}>
-        <h3>{node.webTitle}</h3>
+        <h3>{node[titleKey]}</h3>
       </DragZone>
     )}
     <Indent>

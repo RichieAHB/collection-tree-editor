@@ -14,8 +14,8 @@ const isSubPath = (parent, sub) =>
     return kp !== ks || ip !== is;
   });
 
-const pathForMove = (source, target) => {
-  return target.map((targetPathSpec, i) => {
+const pathForMove = (source, target) =>
+  target.map((targetPathSpec, i) => {
     const { key: kt, index: it, type: tt } = targetPathSpec;
     if (i === source.length - 1) {
       const { key: ks, index: is } = source[i];
@@ -26,6 +26,5 @@ const pathForMove = (source, target) => {
     }
     return targetPathSpec;
   });
-};
 
 export { findAtPath, isSubPath, pathForMove, pathSpec };
