@@ -1,4 +1,5 @@
-import { pathSpec, findAtPath } from './PathUtils';
+import * as Actions from '../Actions';
+import { pathSpec, findAtPath, pathForMove } from './PathUtils';
 
 const buildTree = (entities, rootType, rootId, structure) => {
   const buildNode = (entities, nodeType, nodeId, [childSpec, ...structure]) => {
@@ -30,8 +31,6 @@ const el = (
   modelKey,
   childrenKey
 });
-
-const ROOT = Symbol();
 
 const walkTree = structure =>
   function*(tree) {
@@ -67,12 +66,28 @@ const walkTree = structure =>
     yield* walk(tree, structure);
   };
 
+const insert = (tree, sourcePath, path, data, type) => {
+  const newPath = sourcePath ? pathForMove(sourcePath, path) : path;
+  const { key, index } = newPath.pop();
+  const parent = findAtPath(tree, newPath);
+  parent[key].splice(index, 0, data);
+  return [Actions.insert(data.id, data, type)];
+};
+
+// will return an action with undefined keys if id and type are missing
+const remove = (tree, sourcePath, path, id, type) => {
+  const newPath = sourcePath ? pathForMove(sourcePath, path) : path;
+  const { key, index } = newPath.pop();
+  const parent = findAtPath(tree, newPath);
+  parent[key].splice(index, 1);
+  return [Actions.remove(id, type)];
+};
+
 // this mutates the tree and is expected to be used with immer
 // optionally pass a newNode and newNodeType to make sure we don't delete
 // the new node
 const dedupe = (tree, structure, newNode = false, newNodeType = null) => {
   const seen = {};
-
   const edits = [];
 
   const gen = walkTree(structure)(tree);
@@ -87,17 +102,8 @@ const dedupe = (tree, structure, newNode = false, newNodeType = null) => {
       (node !== newNode && node.id === newNode.id && type === newNodeType) ||
       seen[type].indexOf(node.id) > -1
     ) {
-      const newPath = path.slice();
-      const { key, index } = newPath.pop();
-      const parent = findAtPath(tree, newPath);
-      parent[key].splice(index, 1);
-      edits.push({
-        action: 'DELETE',
-        payload: {
-          type,
-          id: node.id
-        }
-      });
+      console.log(node)
+      edits.push(remove(tree, null, path, node.id, type));
       didDelete = true;
     } else {
       seen[type].push(node.id);
@@ -109,4 +115,4 @@ const dedupe = (tree, structure, newNode = false, newNodeType = null) => {
   return edits;
 };
 
-export { buildTree, dedupe, el };
+export { buildTree, insert, remove, dedupe, el };

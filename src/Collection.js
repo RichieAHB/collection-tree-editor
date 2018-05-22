@@ -1,8 +1,8 @@
 import React from 'react';
 import produce from 'immer';
 import Node from './Node';
-import { findAtPath, isSubPath, pathForMove } from './utils/PathUtils';
-import { dedupe } from './utils/TreeUtils';
+import { isSubPath } from './utils/PathUtils';
+import { insert, remove, dedupe } from './utils/TreeUtils';
 import { INTERNAL_TRANSFER_TYPE } from './constants';
 
 class Collection extends React.Component {
@@ -18,10 +18,7 @@ class Collection extends React.Component {
   detach = path => () => {
     try {
       const tree = produce(this.state.tree, draftTree => {
-        const newPath = path.slice();
-        const { key, index } = newPath.pop();
-        const parent = findAtPath(draftTree, newPath);
-        parent[key].splice(index, 1);
+        remove(draftTree, null, path)
       });
       this.setState({
         draftTree: tree
@@ -76,37 +73,21 @@ class Collection extends React.Component {
 
     const edits = [];
 
-    // check whether the type being dropped suits the place it's being dropped
-
     try {
       // this could probably just be draft tree
       const tree = produce(
         this.state.draftTree || this.state.tree,
         draftTree => {
-          const newPath = sourcePath ? pathForMove(sourcePath, path) : path;
-          const { key, index } = newPath.pop();
-          const parent = findAtPath(draftTree, newPath);
-          parent[key].splice(index, 0, data);
-
-          // TODO: build this stuff out
-          edits.push({
-            action: 'INSERT',
-            payload: {
-              id: data.id,
-              type,
-              data
-            }
-          });
-
-          edits.push(
-            ...dedupe(draftTree, this.props.structure, data, type)
-          );
-
-          // flatten
+          edits.push(...insert(draftTree, sourcePath, path, data, type));
+          // this will catch previous detaches
+          edits.push(...dedupe(draftTree, this.props.structure, data, type));
+          // TODO: flatten
         }
       );
 
-      this.props.onChange(tree);
+      console.log(JSON.stringify(edits));
+
+      this.props.onChange(tree, edits);
     } catch (e) {
       console.log(`Couldn't attach: ${e.message}`);
     }
