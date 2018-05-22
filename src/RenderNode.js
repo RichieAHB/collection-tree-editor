@@ -9,6 +9,7 @@ const Indent = ({ children }) => (
 const RenderNode = ({
   node,
   onDragStart,
+  dragType,
   dragData,
   children,
   onChildDrop,
@@ -19,8 +20,8 @@ const RenderNode = ({
 }) => (
   <div>
     {canDrag && (
-      <DragZone onDragStart={onDragStart} data={dragData}>
-        <h3>{node.title}</h3>
+      <DragZone json onDragStart={onDragStart} type={dragType} data={dragData}>
+        <h3>{node.webTitle}</h3>
       </DragZone>
     )}
     <Indent>

@@ -6,7 +6,10 @@ class DragZone extends React.Component {
   };
 
   onDragStart = e => {
-    e.dataTransfer.setData('data', JSON.stringify(this.props.data));
+    const data = this.props.json
+      ? JSON.stringify(this.props.data)
+      : this.props.data;
+    e.dataTransfer.setData(this.props.type, data);
     this.props.onDragStart(e);
     this.setState({
       dragging: true
@@ -45,7 +48,8 @@ class DragZone extends React.Component {
 
 DragZone.defaultProps = {
   onDragEnd: () => {},
-  onDragStart: () => {}
+  onDragStart: () => {},
+  type: 'text'
 };
 
 export default DragZone;

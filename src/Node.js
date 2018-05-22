@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { pathSpec } from './utils/TreeUtils';
+import { pathSpec } from './utils/PathUtils';
+import { INTERNAL_TRANSFER_TYPE } from './constants';
 
 const Node = ({
   node,
@@ -14,6 +15,7 @@ const Node = ({
     {renderers[type]({
       node,
       onDragStart: detach(path),
+      dragType: INTERNAL_TRANSFER_TYPE,
       dragData: {
         data: node,
         type: type,

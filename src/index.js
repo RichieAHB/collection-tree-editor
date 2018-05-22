@@ -1,17 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
+import { el } from './utils/TreeUtils';
 import model from './model';
-
-const el = (
-  childrenType,
-  childrenKey = `${childrenType}s`,
-  modelKey = `${childrenType}s`
-) => ({
-  childrenType,
-  modelKey,
-  childrenKey
-});
 
 ReactDOM.render(
   <App
