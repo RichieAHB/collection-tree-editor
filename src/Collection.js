@@ -35,7 +35,13 @@ class Collection extends React.Component {
     return mapper(e.dataTransfer.getData(type));
   }
 
-  detach = path => () => {
+  detach = (path, type, node) => e => {
+    const data = JSON.stringify({
+      data: node,
+      type,
+      path
+    });
+    e.dataTransfer.setData(INTERNAL_TRANSFER_TYPE, data);
     try {
       const tree = produce(this.state.tree, draftTree => {
         remove(draftTree, null, path);

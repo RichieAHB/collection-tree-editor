@@ -1,6 +1,24 @@
 import * as React from 'react';
-import DragZone from './DragZone';
-import DropZone from './DropZone';
+
+const DragZone = props => (
+  <div
+    style={{
+      background: 'white',
+      color: '#221133',
+      cursor: 'pointer',
+      padding: '10px',
+      margin: '5px 0'
+    }}
+    {...props}
+  />
+);
+
+const DropZone = props => (
+  <div
+    style={{ border: '2px dashed white', margin: '5px 0', padding: '10px' }}
+    {...props}
+  />
+);
 
 const Indent = ({ children }) => (
   <div style={{ marginLeft: '10px' }}>{children}</div>
@@ -8,9 +26,8 @@ const Indent = ({ children }) => (
 
 const RenderNode = ({
   node,
-  onDragStart,
-  dragType,
-  dragData,
+  getDragProps,
+  getDropProps,
   children,
   onChildDrop,
   canDrag,
@@ -21,7 +38,7 @@ const RenderNode = ({
 }) => (
   <div>
     {canDrag && (
-      <DragZone json onDragStart={onDragStart} type={dragType} data={dragData}>
+      <DragZone {...getDragProps()}>
         <h3>{node[titleKey]}</h3>
       </DragZone>
     )}
@@ -29,7 +46,7 @@ const RenderNode = ({
       {children.map((child, i) => (
         <React.Fragment key={i}>
           {canDrop && (
-            <DropZone onDrop={onChildDrop(i)}>
+            <DropZone {...getDropProps(i)}>
               Drop {allowedType} in {parentType} at index: {i}
             </DropZone>
           )}
@@ -37,7 +54,7 @@ const RenderNode = ({
         </React.Fragment>
       ))}
       {canDrop && (
-        <DropZone onDrop={onChildDrop(children.length)}>
+        <DropZone {...getDropProps(children.length)}>
           Drop {allowedType} in {parentType} at index: {children.length}
         </DropZone>
       )}
