@@ -48,16 +48,19 @@ type EditAction = InsertAction | RemoveAction;
 
 type Renderer = () => any;
 
-type RendererMap = {
-  [string]: Renderer
+type SchemaNode = {
+  type: string,
+  childrenKey: string,
+  idKey: string,
+  childType?: SchemaNode,
+  renderer: Renderer
 };
 
 type CollectionProps<Tree> = {
   dropMappers: DropMapperMap,
-  structure: any[],
+  schema: SchemaNode,
   tree: Tree,
   onChange: (tree: Tree, edits: EditAction[]) => void,
-  renderers: RendererMap,
   dedupeTypes: string[]
 };
 
@@ -211,7 +214,7 @@ class Collection<Tree> extends React.Component<
 
   render() {
     const { attach, detach, onDragEnd } = this;
-    const { structure, renderers } = this.props;
+    const { schema } = this.props;
     const { tree } = this.state;
 
     return (
@@ -221,8 +224,7 @@ class Collection<Tree> extends React.Component<
           path={[]}
           attach={attach}
           detach={detach}
-          renderers={renderers}
-          structure={structure}
+          schema={schema}
         />
       </div>
     );

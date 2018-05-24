@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Collection, RenderNode, buildTree } from './lib';
+import { Collection, buildTree } from './lib';
 import capiQuery from './capi';
 
 const capi = capiQuery();
@@ -89,9 +89,9 @@ class App extends React.Component {
     normalizedData,
     rootId,
     rootKey,
-    structure
+    schema
   }) => ({
-    tree: buildTree(normalizedData, rootKey, rootId, structure)
+    tree: buildTree(normalizedData, rootKey, rootId, schema)
   });
 
   handleChange = tree =>
@@ -107,16 +107,8 @@ class App extends React.Component {
         </DragZone>
         <Collection
           tree={this.state.tree}
-          structure={this.props.structure}
+          schema={this.props.schema}
           onChange={this.handleChange}
-          renderers={{
-            // these don't have to be the same component
-            root: props => <RenderNode titleKey="webTitle" {...props} />,
-            collection: props => <RenderNode titleKey="webTitle" {...props} />,
-            articleFragment: props => (
-              <RenderNode titleKey="webTitle" {...props} />
-            )
-          }}
           dropMappers={{
             text: text => urlToArticle(text)
           }}

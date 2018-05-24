@@ -8,14 +8,14 @@ const Node = ({
   attach,
   detach,
   renderers,
-  structure: [{ childrenKey, type, idKey } = {}, ...structure]
+  schema: { childrenKey, type, renderer, childType: schema = {} } = {}
 }) => {
-  const [{ type: childType, idKey: childIdKey } = {}] = structure;
+  const { type: childType, idKey: childIdKey } = schema;
 
   const canDrag = path.length > 0;
   const canDrop = !!childrenKey;
 
-  return renderers[type]({
+  return renderer({
     node,
     getDragProps: () =>
       canDrag
@@ -43,7 +43,7 @@ const Node = ({
         attach={attach}
         detach={detach}
         renderers={renderers}
-        structure={structure}
+        schema={schema}
       />
     ))
   });

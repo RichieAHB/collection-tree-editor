@@ -3,51 +3,60 @@ import { toPathStr, pathForMove } from './PathUtils';
 import get from 'lodash/fp/get';
 import set from 'lodash/fp/set';
 
-const el = (type, childrenKey, idKey = 'id') => ({
-  type,
-  childrenKey,
-  idKey
-});
-
 const buildTree = (_entities, rootType, rootId, _structure) => {
-  const buildNode = (entities, nodeType, nodeId, [spec, ...structure]) => {
-    const node = entities[nodeType][nodeId];
+  const buildNode = (
+    entities,
+    modelKey,
+    nodeId,
+    { childrenKey, type, childType: schema = {} } = {}
+  ) => {
+    const node = entities[modelKey][nodeId];
 
-    const [childSpec] = structure;
+    const { type: childType } = schema;
 
-    if (!childSpec) {
+    if (!childType) {
       return node;
     }
-
-    const { childrenKey } = spec;
-    const { type: childType } = childSpec;
 
     return set(
       childrenKey,
       (get(childrenKey, node) || []).map(childId =>
-        buildNode(entities, `${childType}s`, childId, structure)
+        buildNode(entities, `${childType}s`, childId, schema)
       ),
       node
     );
   };
 
-  console.log(buildNode(_entities, rootType, rootId, _structure));
-
   return buildNode(_entities, rootType, rootId, _structure);
 };
+
+const defaults = {
+  idKey: 'id'
+};
+
+const el = (type, renderer, childType = undefined, opts = {}) => ({
+  childrenKey: childType ? `${childType.type}s` : undefined,
+  ...{
+    ...defaults,
+    ...opts
+  },
+  childType,
+  type,
+  renderer
+});
 
 const TO_REMOVE = Symbol();
 
 const dedupeTree = (
   rootNode,
-  rootStructure,
+  rootStructure
   // dedupeTypes = [],
   // node = null,
-  // nodeType = null
+  // modelKey = null
 ) => {
   const dedupeNode = (
     node,
-    [{ type, childrenKey, idKey } = {}, ...structure],
+    { childrenKey, type, idKey, childType: schema = {} } = {},
     edits = [],
     seen = {}
   ) => {
@@ -76,7 +85,7 @@ const dedupeTree = (
       ([curChildren, curEdits, curSeen], child) => {
         const [newChild, nextEdits, nextSeen] = dedupeNode(
           child,
-          structure,
+          schema,
           curEdits,
           curSeen
         );
