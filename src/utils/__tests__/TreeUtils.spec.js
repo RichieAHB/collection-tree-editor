@@ -1,7 +1,14 @@
-import { dedupe, el } from '../TreeUtils';
+import { el, dedupeTree } from '../TreeUtils';
+
+const structure = [
+  el('root', 'foos'),
+  el('foo', 'foos'),
+  el('foo', 'foos'),
+  el('foo'),
+];
 
 describe('TreeUtils', () => {
-  describe('dedupe', () => {
+  describe('dedupeTree', () => {
     it('mutates the tree and removes duplicates by type', () => {
       const tree = {
         foos: [
@@ -24,9 +31,9 @@ describe('TreeUtils', () => {
         ]
       };
 
-      dedupe(tree, [el('foo'), el('foo'), el('foo')]);
+      const [newTree, edits] = dedupeTree(tree, structure);
 
-      expect(tree).toEqual({
+      expect(newTree).toEqual({
         foos: [
           {
             id: 1,

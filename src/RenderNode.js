@@ -24,6 +24,14 @@ const Indent = ({ children }) => (
   <div style={{ marginLeft: '10px' }}>{children}</div>
 );
 
+const isObj = val => val !== null && typeof val === 'object';
+
+const nested = (obj, path) =>
+  (Array.isArray(path) ? path : [path]).reduce(
+    (acc, key) => (isObj(acc) ? acc[key] : acc),
+    obj
+  ) || '';
+
 const RenderNode = ({
   node,
   getDragProps,
@@ -39,7 +47,7 @@ const RenderNode = ({
   <div>
     {canDrag && (
       <DragZone {...getDragProps()}>
-        <h3>{node[titleKey]}</h3>
+        <h3>{nested(node, titleKey)}</h3>
       </DragZone>
     )}
     <Indent>

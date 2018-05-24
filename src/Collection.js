@@ -1,60 +1,165 @@
+// @flow
+
 import React from 'react';
-import produce from 'immer';
 import Node from './Node';
 import { isSubPath } from './utils/PathUtils';
-import { insert, remove, dedupe } from './utils/TreeUtils';
+import { insert, remove /* dedupe */ } from './utils/TreeUtils';
 import { INTERNAL_TRANSFER_TYPE } from './Constants';
 
-class Collection extends React.Component {
-  state = {
-    tree: null,
-    draftTree: null
+type PathSpec = {|
+  key: string,
+  index: number,
+  type: ?string
+|};
+
+type Path = PathSpec[];
+
+type DropSpec = {
+  data: any,
+  type: string,
+  path?: Path
+};
+
+type DropMapper = string => DropSpec;
+
+type DropMapperMap = {
+  [string]: DropMapper
+};
+
+type InsertAction = {|
+  type: 'INSERT',
+  payload: {
+    id: string,
+    data: any,
+    type: string
+  }
+|};
+
+type RemoveAction = {|
+  type: 'INSERT',
+  payload: {
+    id: string,
+    data: any,
+    type: string
+  }
+|};
+
+type EditAction = InsertAction | RemoveAction;
+
+type Renderer = () => any;
+
+type RendererMap = {
+  [string]: Renderer
+};
+
+type CollectionProps<Tree> = {
+  dropMappers: DropMapperMap,
+  structure: any[],
+  tree: Tree,
+  onChange: (tree: Tree, edits: EditAction[]) => void,
+  renderers: RendererMap,
+  dedupeTypes: string[]
+};
+
+type CollectionState<Tree> = {|
+  tree: Tree,
+  draftData: {
+    tree: ?Tree,
+    edits: ?(EditAction[])
+  }
+|};
+
+class Collection<Tree> extends React.Component<
+  CollectionProps<Tree>,
+  CollectionState<Tree>
+> {
+  constructor(props: CollectionProps<Tree>) {
+    super(props);
+    this.state = {
+      tree: this.props.tree,
+      draftData: {
+        tree: null,
+        edits: null
+      }
+    };
+  }
+
+  static defaultProps = {
+    dropMappers: {}
   };
 
-  static getDerivedStateFromProps = ({ tree }) => ({
+  static getDerivedStateFromProps = ({ tree }: CollectionProps<Tree>) => ({
     tree
   });
 
   onDragEnd = () => {
     this.setState({
-      draftTree: null
+      draftData: {
+        tree: null,
+        edits: null
+      }
     });
   };
 
-  get dropMappers() {
+  get dropMappers(): DropMapperMap {
     return {
-      [INTERNAL_TRANSFER_TYPE]: data => JSON.parse(data),
+      [INTERNAL_TRANSFER_TYPE]: (data: string): DropSpec => JSON.parse(data),
       ...this.props.dropMappers
     };
   }
 
-  async getDropData(e) {
-    const [type, mapper] = Object.entries(this.dropMappers).find(([t]) =>
-      e.dataTransfer.getData(t)
+  async getDropData(e: DragEvent): Promise<DropSpec> {
+    const dataTransfer: ?DataTransfer = e.dataTransfer;
+
+    if (!dataTransfer || !dataTransfer.getData) {
+      throw new Error('Data transfer issue');
+    }
+
+    const { dropMappers } = this;
+
+    const type = Object.keys(dropMappers).find(key =>
+      dataTransfer.getData(key)
     );
-    return mapper(e.dataTransfer.getData(type));
+
+    if (!type) {
+      throw new Error('Unknown transfer type');
+    }
+
+    const mapper = dropMappers[type];
+
+    // listen for errors here??
+    return mapper(dataTransfer.getData(type));
   }
 
-  detach = (path, type, node) => e => {
-    const data = JSON.stringify({
-      data: node,
+  detach = (path: Path, type: string, data: any) => (e: DragEvent) => {
+    const dataTransfer: ?DataTransfer = e.dataTransfer;
+
+    if (!dataTransfer || !dataTransfer.getData) {
+      throw new Error('Data transfer issue');
+    }
+
+    const dropSpecString = JSON.stringify({
+      data,
       type,
       path
     });
-    e.dataTransfer.setData(INTERNAL_TRANSFER_TYPE, data);
+
+    dataTransfer.setData(INTERNAL_TRANSFER_TYPE, dropSpecString);
+
     try {
-      const tree = produce(this.state.tree, draftTree => {
-        remove(draftTree, null, path);
-      });
+      const [tree, edits] = remove(this.state.tree, null, path);
       this.setState({
-        draftTree: tree
+        draftData: {
+          tree,
+          edits
+        }
       });
-    } catch (e) {
-      console.log(`Couldn't detach: ${e.message}`);
+    } catch (error) {
+      console.log(`Couldn't detach: ${error.message}`);
     }
   };
 
-  attach = path => async e => {
+  attach = (path: Path) => async (e: DragEvent) => {
     e.preventDefault();
     let spec;
 
@@ -76,32 +181,31 @@ class Collection extends React.Component {
       return;
     }
 
+    // TODO: remove type from PathSpec and find the type from the structure?
     const allowedType = path[path.length - 1].type;
 
     if (type !== allowedType) {
-      console.log(`can't drop ${type}, expecting ${allowedType}`);
+      console.log(`can't drop ${type}, expecting ${allowedType || 'unknown'}`);
       return;
     }
 
-    const edits = [];
-
     try {
       // this could probably just be draft tree
-      const tree = produce(
-        this.state.draftTree || this.state.tree,
-        draftTree => {
-          edits.push(...insert(draftTree, sourcePath, path, data, type));
-          // this will catch previous detaches
-          edits.push(...dedupe(draftTree, this.props.structure, data, type));
-          // TODO: flatten
-        }
+      const [tree, edits] = insert(
+        this.state.draftData.tree || this.state.tree,
+        sourcePath,
+        path,
+        data,
+        type
       );
 
-      console.log(JSON.stringify(edits));
+      // dedupe
 
-      this.props.onChange(tree, edits);
+      const combinedEdits = [...(this.state.draftData.edits || []), ...edits];
+
+      this.props.onChange(tree, combinedEdits);
     } catch (error) {
-      console.log(`Couldn't attach: ${e.message}`);
+      console.log(`Couldn't attach: ${error.message}`);
     }
   };
 
@@ -114,7 +218,6 @@ class Collection extends React.Component {
       <div onDragEnd={onDragEnd}>
         <Node
           node={tree}
-          type="root"
           path={[]}
           attach={attach}
           detach={detach}
@@ -125,9 +228,5 @@ class Collection extends React.Component {
     );
   }
 }
-
-Collection.defaultProps = {
-  dropMappers: {}
-};
 
 export default Collection;

@@ -1,24 +1,11 @@
-import { pathSpec, findAtPath, isSubPath, pathForMove } from '../PathUtils';
+import { pathSpec, toPathStr, isSubPath, pathForMove } from '../PathUtils';
 
 describe('PathUtils', () => {
-  describe('findAtPath', () => {
-    it('returns the deeply nested child in a tree according to a path', () => {
-      const tree = {
-        a: [
-          {
-            b: [
-              {},
-              {
-                c: [{}, {}]
-              }
-            ]
-          }
-        ]
-      };
-
+  describe('toPathStr', () => {
+    it('creates a path string', () => {
       expect(
-        findAtPath(tree, [pathSpec('a', 0), pathSpec('b', 1), pathSpec('c', 0)])
-      ).toBe(tree.a[0].b[1].c[0]);
+        toPathStr([pathSpec('a', 0), pathSpec('b', 1), pathSpec('c', 0)])
+      ).toBe('a[0].b[1].c[0]');
     });
   });
 

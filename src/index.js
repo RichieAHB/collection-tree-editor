@@ -10,9 +10,10 @@ ReactDOM.render(
     rootKey="fronts"
     rootId={1}
     structure={[
-      el('collection'),
-      el('articleFragment'),
-      el('articleFragment', 'supporting')
+      el('root', 'collections'),
+      el('collection', 'articleFragments'),
+      el('articleFragment', 'supporting'),
+      el('articleFragment')
     ]}
   />,
   document.getElementById('root')

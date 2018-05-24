@@ -1,35 +1,45 @@
 import * as React from 'react';
 import { pathSpec } from './utils/PathUtils';
+import get from 'lodash/fp/get';
 
 const Node = ({
   node,
-  type,
   path,
   attach,
   detach,
   renderers,
-  structure: [{ childrenKey, childrenType } = {}, ...structure]
-}) =>
-  renderers[type]({
+  structure: [{ childrenKey, type, idKey } = {}, ...structure]
+}) => {
+  const [{ type: childType, idKey: childIdKey } = {}] = structure;
+
+  const canDrag = path.length > 0;
+  const canDrop = !!childrenKey;
+
+  return renderers[type]({
     node,
-    getDragProps: () => ({
-      draggable: true,
-      onDragStart: detach(path, type, node)
-    }),
-    getDropProps: i => ({
-      onDragOver: e => e.preventDefault(),
-      onDrop: attach([...path, pathSpec(childrenKey, i, childrenType)])
-    }),
-    canDrag: path.length > 0,
-    canDrop: path.length <= structure.length + 2,
+    getDragProps: () =>
+      canDrag
+        ? {
+            draggable: true,
+            onDragStart: detach(path, type, node)
+          }
+        : {},
+    getDropProps: i =>
+      canDrop
+        ? {
+            onDragOver: e => e.preventDefault(),
+            onDrop: attach([...path, pathSpec(childrenKey, i, childType)])
+          }
+        : {},
+    canDrag,
+    canDrop,
     parentType: type,
-    allowedType: childrenType,
-    children: (node[childrenKey] || []).map((child, i) => (
+    allowedType: childType,
+    children: (get(childrenKey, node) || []).map((child, i) => (
       <Node
-        key={child.id}
+        key={child[childIdKey] || i}
         node={child}
-        type={childrenType}
-        path={[...path, pathSpec(childrenKey, i, childrenType)]}
+        path={[...path, pathSpec(childrenKey, i, childType)]}
         attach={attach}
         detach={detach}
         renderers={renderers}
@@ -37,5 +47,6 @@ const Node = ({
       />
     ))
   });
+};
 
 export default Node;

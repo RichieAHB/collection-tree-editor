@@ -4,8 +4,18 @@ const pathSpec = (key, index, type = null) => ({
   type
 });
 
-const findAtPath = (obj, path) =>
-  path.reduce((o, { key, index }) => o[key][index], obj);
+const toPathStr = (path, separateLastIndex = false) => {
+  if (!separateLastIndex) {
+    return path.map(({ key, index }) => `${key}[${index}]`).join('.');
+  }
+
+  const prePath = path.slice();
+  const { key, index } = prePath.pop();
+
+  const str = toPathStr(prePath);
+
+  return [`${str}.${key}`, index];
+}
 
 const isSubPath = (parent, sub) =>
   sub.length > parent.length &&
@@ -27,4 +37,4 @@ const pathForMove = (source, target) =>
     return targetPathSpec;
   });
 
-export { findAtPath, isSubPath, pathForMove, pathSpec };
+export { toPathStr, isSubPath, pathForMove, pathSpec };
