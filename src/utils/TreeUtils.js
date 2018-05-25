@@ -49,7 +49,7 @@ const TO_REMOVE = Symbol();
 
 const dedupeTree = (
   rootNode,
-  rootStructure
+  rootSchema
   // dedupeTypes = [],
   // node = null,
   // modelKey = null
@@ -100,35 +100,88 @@ const dedupeTree = (
     return [newNode, newEdits, newSeen];
   };
 
-  const [newTree, edits] = dedupeNode(rootNode, rootStructure);
+  const [newTree, edits] = dedupeNode(rootNode, rootSchema);
 
   return [newTree, edits];
 };
 
-const insert = (tree, sourcePath, path, data, type) => {
-  // should walk schema for path here, this will be the only way to get the parent type
+const schemaAtDepth = (schema, depth) => {
+  let newSchema = schema;
+  for (let i = 0; i < depth; i += 1) {
+    newSchema = newSchema.childType;
+  }
+  return newSchema;
+};
+
+const getParents = (tree, schema, path) => {
+  const parentPath = path.slice(0, path.length - 1);
+  const [parents] = parentPath.reduce(
+    ([curParents, curPath, curSchema], pathSpec) => {
+      const pathStr = toPathStr(curPath);
+      return [
+        [
+          ...curParents,
+          {
+            parentId: (pathStr ? get(pathStr, tree) : tree).id,
+            parentType: curSchema.type
+          }
+        ],
+        [...curPath, pathSpec],
+        curSchema.childType
+      ];
+    },
+    [[], [], schema]
+  );
+  return parents;
+};
+
+const getContext = (tree, schema, sourcePath, path) => {
   const newPath = sourcePath ? pathForMove(sourcePath, path) : path;
+  const parents = getParents(tree, schema, newPath);
   const [pathStr, index] = toPathStr(newPath, true);
-  const arr = get(pathStr, tree) || [];
+  const { type } = schemaAtDepth(schema, newPath.length);
+  const children = get(pathStr, tree) || [];
+
+  return {
+    type,
+    parents,
+    pathStr,
+    index,
+    children
+  };
+};
+
+const insert = (tree, schema, sourcePath, path, data) => {
+  const { type, parents, pathStr, index, children } = getContext(
+    tree,
+    schema,
+    sourcePath,
+    path
+  );
+
   const newTree = set(
     pathStr,
-    [...arr.slice(0, index), data, ...arr.slice(index)],
+    [...children.slice(0, index), data, ...children.slice(index)],
     tree
   );
-  return [newTree, [Actions.insert(data.id, data, type)]];
+  return [newTree, [Actions.insert(data.id, type, data, parents)]];
 };
 
 // will return an action with undefined keys if id and type are missing
-const remove = (tree, sourcePath, path, id, type) => {
-  const newPath = sourcePath ? pathForMove(sourcePath, path) : path;
-  const [pathStr, index] = toPathStr(newPath, true);
-  const arr = get(pathStr, tree) || [];
+const remove = (tree, schema, sourcePath, path, id) => {
+  const { type, parents, pathStr, index, children } = getContext(
+    tree,
+    schema,
+    sourcePath,
+    path
+  );
+
   const newTree = set(
     pathStr,
-    [...arr.slice(0, index), ...arr.slice(index + 1)],
+    [...children.slice(0, index), ...children.slice(index + 1)],
     tree
   );
-  return [newTree, [Actions.remove(id, type)]];
+  return [newTree, [Actions.remove(id, type, parents)]];
 };
 
 export { insert, remove, dedupeTree, buildTree, el };

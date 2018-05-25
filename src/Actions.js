@@ -1,17 +1,19 @@
-const insert = (id, data, type) => ({
+const insert = (id, type, data, parents) => ({
   type: 'INSERT',
   payload: {
     id,
     data,
-    type
+    type,
+    parents
   }
 });
 
-const remove = (id, type) => ({
+const remove = (id, type, parents) => ({
   type: 'REMOVE',
   payload: {
     id,
-    type
+    type,
+    parents
   }
 });
 

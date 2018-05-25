@@ -150,7 +150,14 @@ class Collection<Tree> extends React.Component<
     dataTransfer.setData(INTERNAL_TRANSFER_TYPE, dropSpecString);
 
     try {
-      const [tree, edits] = remove(this.state.tree, null, path);
+      const [tree, edits] = remove(
+        this.state.tree,
+        this.props.schema,
+        null,
+        path,
+        data.id
+      );
+
       this.setState({
         draftData: {
           tree,
@@ -196,16 +203,17 @@ class Collection<Tree> extends React.Component<
       // this could probably just be draft tree
       const [tree, edits] = insert(
         this.state.draftData.tree || this.state.tree,
+        this.props.schema,
         sourcePath,
         path,
-        data,
-        type
+        data
       );
 
       // dedupe
 
       const combinedEdits = [...(this.state.draftData.edits || []), ...edits];
 
+      console.log(combinedEdits);
       this.props.onChange(tree, combinedEdits);
     } catch (error) {
       console.log(`Couldn't attach: ${error.message}`);
