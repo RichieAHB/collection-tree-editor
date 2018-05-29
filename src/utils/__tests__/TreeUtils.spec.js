@@ -31,7 +31,7 @@ describe('TreeUtils', () => {
         ]
       };
 
-      const [newTree, edits] = dedupeTree(tree, structure);
+      const [newTree, actions] = dedupeTree(tree, structure);
 
       expect(newTree).toEqual({
         foos: [

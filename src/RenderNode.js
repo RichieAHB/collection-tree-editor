@@ -1,4 +1,8 @@
+// @flow
+
 import * as React from 'react';
+import get from 'lodash/fp/get';
+import { type RendererProps } from './utils/TreeUtils';
 
 const DragZone = props => (
   <div
@@ -24,30 +28,25 @@ const Indent = ({ children }) => (
   <div style={{ marginLeft: '10px' }}>{children}</div>
 );
 
-const isObj = val => val !== null && typeof val === 'object';
-
-const nested = (obj, path) =>
-  (Array.isArray(path) ? path : [path]).reduce(
-    (acc, key) => (isObj(acc) ? acc[key] : acc),
-    obj
-  ) || '';
+type RenderNodeProps = RendererProps & {
+  titleKey?: string
+};
 
 const RenderNode = ({
   node,
   getDragProps,
   getDropProps,
   children,
-  onChildDrop,
   canDrag,
   canDrop,
   parentType,
   allowedType,
   titleKey = 'title'
-}) => (
+}: RenderNodeProps) => (
   <div>
     {canDrag && (
       <DragZone {...getDragProps()}>
-        <h3>{nested(node, titleKey)}</h3>
+        <h3>{get(titleKey, node)}</h3>
       </DragZone>
     )}
     <Indent>

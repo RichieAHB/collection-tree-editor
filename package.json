@@ -6,16 +6,18 @@
   "dependencies": {
     "lodash": "^4.17.10",
     "react": "^16.3.2",
-    "react-dom": "^16.3.2",
-    "react-scripts": "1.1.4"
+    "react-dom": "^16.3.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "update-types": "flow-typed install --ignoreDeps peer bundle dev"
   },
   "devDependencies": {
-    "flow-bin": "^0.72.0"
+    "flow-bin": "^0.72.0",
+    "flow-typed": "^2.4.0",
+    "react-scripts": "1.1.4"
   }
 }
