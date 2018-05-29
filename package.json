@@ -16,6 +16,8 @@
     "update-types": "flow-typed install --ignoreDeps peer bundle dev"
   },
   "devDependencies": {
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
     "flow-bin": "^0.72.0",
     "flow-typed": "^2.4.0",
     "react-scripts": "1.1.4"

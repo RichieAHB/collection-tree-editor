@@ -145,7 +145,7 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
     }
 
     if (!spec) {
-      return;
+      return 'could not find a way to handle this drag event';
     }
 
     // TODO: change this to `pathAtDepth` to get the type

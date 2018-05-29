@@ -15,7 +15,7 @@ type NodeProps = {
 };
 
 const Node = ({ node, path, attach, detach, schema }: NodeProps) => {
-  const { childrenKey, type, renderer, childType: childSchema = {} } = schema;
+  const { childrenKey, type, renderer, childType: childSchema } = schema;
   const { type: childType, idKey: childIdKey } = schema;
 
   const canDrag = path.length > 0;
@@ -41,18 +41,19 @@ const Node = ({ node, path, attach, detach, schema }: NodeProps) => {
     canDrop,
     parentType: type,
     allowedType: childType,
-    children: !!childrenKey
-      ? (get(childrenKey, node) || []).map((child, i) => (
-          <Node
-            key={child[childIdKey] || i}
-            node={child}
-            path={[...path, pathSpec(childrenKey, i, childType)]}
-            attach={attach}
-            detach={detach}
-            schema={schema}
-          />
-        ))
-      : []
+    children:
+      !!childrenKey && !!childSchema
+        ? (get(childrenKey, node) || []).map((child, i) => (
+            <Node
+              key={child[childIdKey] || i}
+              node={child}
+              path={[...path, pathSpec(childrenKey, i, childType)]}
+              attach={attach}
+              detach={detach}
+              schema={childSchema}
+            />
+          ))
+        : []
   });
 };
 
