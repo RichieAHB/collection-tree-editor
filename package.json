@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "update-types": "flow-typed install --ignoreDeps peer bundle dev"
+    "update-types": "flow-typed install --ignoreDeps peer bundle dev",
+    "prepublishOnly": "yarn build"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",
