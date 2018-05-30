@@ -1,7 +1,7 @@
 {
   "name": "gu-collections",
   "version": "0.1.4",
-  "main": "src/lib.js",
+  "main": "dist/index.js",
   "dependencies": {
     "lodash": "^4.17.10",
     "react": "^16.3.0",
