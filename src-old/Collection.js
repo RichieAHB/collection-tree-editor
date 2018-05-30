@@ -189,7 +189,7 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
         }
       });
 
-      edits.forEach(edit => {
+      combinedEdits.forEach(edit => {
         const typeEditors = this.props.editHandlers[edit.type];
         if (!typeEditors) {
           return;
