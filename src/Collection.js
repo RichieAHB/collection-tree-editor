@@ -7,7 +7,7 @@ import { type Path } from './utils/PathUtils';
 import { insert, remove /* dedupe */ } from './utils/TreeUtils';
 import { type SchemaNode } from './utils/TreeUtils';
 import { mergeMoves } from './utils/EditUtils';
-import { type Edit } from './Edits';
+import { type Edit, type EditType, type EditHandlers } from './Edits';
 import { INTERNAL_TRANSFER_TYPE } from './Constants';
 
 type DropSpec = {
@@ -27,6 +27,7 @@ type CollectionProps = {
   schema: SchemaNode,
   tree: Object,
   onChange: (tree: Object, edits: Edit[]) => void,
+  editHandlers: EditHandlers,
   onError: string => void,
   dedupeTypes: string[]
 };
@@ -53,7 +54,9 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
 
   static defaultProps = {
     dropMappers: {},
-    onError: (error: string) => console.log(error)
+    onError: (error: string) => console.log(error),
+    onChange: () => {},
+    editHandlers: {}
   };
 
   static getDerivedStateFromProps = ({ tree }: CollectionProps) => ({
@@ -184,6 +187,18 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
           tree: null,
           edits: null
         }
+      });
+
+      edits.forEach(edit => {
+        const typeEditors = this.props.editHandlers[edit.type];
+        if (!typeEditors) {
+          return;
+        }
+        const nodeTypeEditor = typeEditors[edit.nodeType];
+        if (!nodeTypeEditor) {
+          return;
+        }
+        nodeTypeEditor(edit);
       });
 
       this.props.onChange(tree, combinedEdits);

@@ -9,6 +9,7 @@ const EditTypes = {
 
 type InsertEdit = {|
   type: 'INSERT',
+  nodeType: string,
   payload: {
     id: string,
     data: any,
@@ -20,6 +21,7 @@ type InsertEdit = {|
 
 type RemoveEdit = {|
   type: 'REMOVE',
+  nodeType: string,
   payload: {
     id: string,
     type: string,
@@ -29,6 +31,7 @@ type RemoveEdit = {|
 
 type MoveEdit = {|
   type: 'MOVE',
+  nodeType: string,
   payload: {
     id: string,
     type: string,
@@ -40,6 +43,16 @@ type MoveEdit = {|
 
 type Edit = InsertEdit | RemoveEdit | MoveEdit;
 
+type EditTypeMap = {|
+  MOVE: MoveEdit,
+  REMOVE: RemoveEdit,
+  INSERT: InsertEdit
+|};
+
+type CreateEditFunc = <E>(e: E) => { [string]: (edit: E) => void };
+type EditType = $Keys<EditTypeMap>;
+type EditHandlers = $Shape<$ObjMap<EditTypeMap, CreateEditFunc>>;
+
 const insert = (
   id: string,
   type: string,
@@ -48,6 +61,7 @@ const insert = (
   index: number
 ): InsertEdit => ({
   type: EditTypes.INSERT,
+  nodeType: type,
   payload: {
     id,
     data,
@@ -63,6 +77,7 @@ const remove = (
   parents: ParentSpec[]
 ): RemoveEdit => ({
   type: EditTypes.REMOVE,
+  nodeType: type,
   payload: {
     id,
     type,
@@ -78,6 +93,7 @@ const move = (
   newParents: ParentSpec[]
 ): MoveEdit => ({
   type: EditTypes.MOVE,
+  nodeType: type,
   payload: {
     id,
     type,
@@ -88,4 +104,4 @@ const move = (
 });
 
 export { insert, remove, move, EditTypes };
-export type { InsertEdit, RemoveEdit, MoveEdit, Edit };
+export type { InsertEdit, RemoveEdit, MoveEdit, Edit, EditType, EditHandlers };
