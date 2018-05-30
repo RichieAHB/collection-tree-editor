@@ -664,7 +664,7 @@ function (_React$Component) {
                   }
                 });
 
-                _edits2.forEach(function (edit) {
+                combinedEdits.forEach(function (edit) {
                   var typeEditors = _this.props.editHandlers[edit.type];
 
                   if (!typeEditors) {

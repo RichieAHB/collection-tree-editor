@@ -1,11 +1,19 @@
 import babel from 'rollup-plugin-babel';
 import fs from 'fs';
-import path from 'path';
 
-const flowStr = file =>
-`export * from './${path.basename(file)}';
-export { default } from './${path.basename(file)}';
+const flowStr = entry =>
+  `// @flow
+
+export * from '${entry}';
+export { default } from '${entry}';
 `;
+
+const addFlowDefs = path => ({
+  transformBundle: (_, id) => {
+    // const path =
+    fs.writeFileSync(`${id.file}.flow`, flowStr(path));
+  }
+});
 
 export default [
   {
@@ -14,13 +22,7 @@ export default [
       file: 'dist/index.js',
       format: 'cjs'
     },
-    plugins: [
-      babel(),
-      {
-        transformBundle: (_, { file }) =>
-          fs.writeFileSync(`${file}.flow`, flowStr(file))
-      }
-    ],
+    plugins: [babel(), addFlowDefs('../src/index.js')],
     external: ['react', 'lodash/fp/get', 'lodash/fp/set']
   }
 ];
