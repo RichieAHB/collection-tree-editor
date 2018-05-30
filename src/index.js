@@ -1,27 +1,9 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
-import model from './model';
-import { RenderNode, el } from './lib';
+// @flow
 
-const renderNode = props => <RenderNode titleKey="webTitle" {...props} />;
+export { default as Collection } from './Collection';
+export { buildTree, el } from './utils/TreeUtils';
+export { default as RenderNode } from './RenderNode';
 
-ReactDOM.render(
-  <App
-    normalizedData={model}
-    rootKey="fronts"
-    rootId={1}
-    schema={el(
-      'front',
-      renderNode,
-      el(
-        'collection',
-        renderNode,
-        el('articleFragment', renderNode, el('articleFragment', renderNode), {
-          childrenKey: 'supporting'
-        })
-      )
-    )}
-  />,
-  document.getElementById('root')
-);
+import type { ParentSpec } from './utils/TreeUtils';
+export type { InsertEdit, RemoveEdit, MoveEdit, Edit } from './Edits';
+export type { ParentSpec };

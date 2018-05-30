@@ -4,21 +4,29 @@
   "main": "src/lib.js",
   "dependencies": {
     "lodash": "^4.17.10",
-    "react": "^16.3.2",
-    "react-dom": "^16.3.2"
+    "react": "^16.3.0",
+    "react-dom": "^16.3.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
+    "build": "rollup -c",
     "update-types": "flow-typed install --ignoreDeps peer bundle dev"
   },
   "devDependencies": {
+    "@babel/core": "^7.0.0-beta.49",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.49",
+    "@babel/preset-env": "^7.0.0-beta.49",
+    "@babel/preset-flow": "^7.0.0-beta.49",
+    "@babel/preset-react": "^7.0.0-beta.49",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "flow-bin": "^0.72.0",
     "flow-typed": "^2.4.0",
-    "react-scripts": "1.1.4"
+    "rollup": "^0.59.4",
+    "rollup-plugin-babel": "^4.0.0-beta.4"
+  },
+  "peerDependencies": {
+    "lodash": "^4.17.10",
+    "react": "^16.3.0",
+    "react-dom": "^16.3.0"
   }
 }
