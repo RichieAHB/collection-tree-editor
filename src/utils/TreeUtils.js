@@ -1,8 +1,8 @@
 // @flow
 
 import * as React from 'react';
-import * as Actions from '../Actions';
-import { type Action } from '../Actions';
+import * as Edits from '../Edits';
+import { type Edit } from '../Edits';
 import {
   toPathStr,
   toPathStrAndIndex,
@@ -118,7 +118,7 @@ const dedupeTree = (
   const dedupeNode = (
     node: Object,
     schema: SchemaNode,
-    actions: Action[] = [],
+    edits: Edit[] = [],
     seen: Seen = {},
     path: Path = [],
     tree: Object = node,
@@ -130,7 +130,7 @@ const dedupeTree = (
 
     if ((seen[type] || []).indexOf(id) > -1) {
       const parents = getParents(tree, rootSchema, path);
-      return [TO_REMOVE, [...actions, Actions.remove(id, type, parents)], seen];
+      return [TO_REMOVE, [...edits, Edits.remove(id, type, parents)], seen];
     }
 
     const seenWithNew = {
@@ -139,40 +139,40 @@ const dedupeTree = (
     };
 
     if (!childSchema || !childrenKey) {
-      return [node, actions, seenWithNew];
+      return [node, edits, seenWithNew];
     }
 
     const children: Object[] = get(childrenKey, node);
 
     if (!children) {
-      return [node, actions, seenWithNew];
+      return [node, edits, seenWithNew];
     }
 
-    const [newChildren, newActions, newSeen] = children.reduce(
-      ([curChildren: *, curActions: Action[], curSeen: Seen], child: *, i) => {
-        const [newChild, nextActions, nextSeen] = dedupeNode(
+    const [newChildren, newEdits, newSeen] = children.reduce(
+      ([curChildren: *, curEdits: Edit[], curSeen: Seen], child: *, i) => {
+        const [newChild, nextEdits, nextSeen] = dedupeNode(
           child,
           childSchema,
-          curActions,
+          curEdits,
           curSeen,
           [...path, pathSpec(childrenKey, i)],
           tree,
           rootSchema
         );
-        return [[...curChildren, newChild], nextActions, nextSeen];
+        return [[...curChildren, newChild], nextEdits, nextSeen];
       },
-      [[], actions, seenWithNew]
+      [[], edits, seenWithNew]
     );
     const filteredChildren = newChildren.filter(child => child !== TO_REMOVE);
 
     const newNode = set(childrenKey, filteredChildren, node);
 
-    return [newNode, newActions, newSeen];
+    return [newNode, newEdits, newSeen];
   };
 
-  const [newTree, actions] = dedupeNode(tree, rootSchema);
+  const [newTree, edits] = dedupeNode(tree, rootSchema);
 
-  return [newTree, actions];
+  return [newTree, edits];
 };
 
 const schemaAtDepth = (schema: SchemaNode, depth: number): ?SchemaNode => {
@@ -196,18 +196,18 @@ const getParents = (
   schema: SchemaNode,
   path: Path
 ): ParentSpec[] => {
-  const parentPath = path.slice(0, path.length - 1);
-  const [parents] = parentPath.reduce(
+  const [parents] = path.reduce(
     (
       [curParents: ParentSpec[], curPath: Path, curSchema: ?SchemaNode],
-      pathSpec: PathSpec
+      pathSpec: PathSpec,
+      i
     ): [ParentSpec[], Path, ?SchemaNode] => {
       const pathStr = toPathStr(curPath);
       return [
         [
           ...(curParents || []),
           {
-            id: (pathStr ? get(pathStr, tree) : tree).id,
+            id: (pathStr ? get(pathStr, tree) : tree)[(curSchema || {}).idKey],
             type: (curSchema || {}).type
           }
         ],
@@ -222,6 +222,7 @@ const getParents = (
 
 type ParentContext = {
   type: string,
+  idKey: string,
   parents: ParentSpec[],
   pathStr: string,
   index: number,
@@ -237,11 +238,12 @@ const getContext = (
   const newPath = sourcePath ? pathForMove(sourcePath, path) : path;
   const parents = getParents(tree, schema, newPath);
   const [pathStr, index] = toPathStrAndIndex(newPath);
-  const { type } = schemaAtDepth(schema, newPath.length) || {};
+  const { type, idKey } = schemaAtDepth(schema, newPath.length) || {};
   const children = get(pathStr, tree) || [];
 
   return {
     type,
+    idKey,
     parents,
     pathStr,
     index,
@@ -255,8 +257,8 @@ const insert = (
   sourcePath: ?Path,
   path: Path,
   data: any
-): [Object, Action[]] => {
-  const { type, parents, pathStr, index, children } = getContext(
+): [Object, Edit[]] => {
+  const { type, idKey, parents, pathStr, index, children } = getContext(
     tree,
     schema,
     sourcePath,
@@ -268,18 +270,18 @@ const insert = (
     [...children.slice(0, index), data, ...children.slice(index)],
     tree
   );
-  return [newTree, [Actions.insert(data.id, type, data, parents)]];
+  return [newTree, [Edits.insert(data[idKey], type, data, parents, index)]];
 };
 
-// will return an action with undefined keys if id and type are missing
+// will return an edit with undefined keys if id and type are missing
 const remove = (
   tree: Object,
   schema: SchemaNode,
   sourcePath: ?Path,
   path: Path,
-  id: string
-): [Object, Action[]] => {
-  const { type, parents, pathStr, index, children } = getContext(
+  data: any
+): [Object, Edit[]] => {
+  const { type, idKey, parents, pathStr, index, children } = getContext(
     tree,
     schema,
     sourcePath,
@@ -291,7 +293,7 @@ const remove = (
     [...children.slice(0, index), ...children.slice(index + 1)],
     tree
   );
-  return [newTree, [Actions.remove(id, type, parents)]];
+  return [newTree, [Edits.remove(data[idKey], type, parents)]];
 };
 
 export { insert, remove, dedupeTree, buildTree, el };

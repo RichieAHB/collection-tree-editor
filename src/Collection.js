@@ -6,8 +6,8 @@ import { isSubPath } from './utils/PathUtils';
 import { type Path } from './utils/PathUtils';
 import { insert, remove /* dedupe */ } from './utils/TreeUtils';
 import { type SchemaNode } from './utils/TreeUtils';
-import { mergeMoves } from './utils/ActionUtils';
-import { type Action } from './Actions';
+import { mergeMoves } from './utils/EditUtils';
+import { type Edit } from './Edits';
 import { INTERNAL_TRANSFER_TYPE } from './Constants';
 
 type DropSpec = {
@@ -26,7 +26,7 @@ type CollectionProps = {
   dropMappers: DropMapperMap,
   schema: SchemaNode,
   tree: Object,
-  onChange: (tree: Object, actions: Action[]) => void,
+  onChange: (tree: Object, edits: Edit[]) => void,
   onError: string => void,
   dedupeTypes: string[]
 };
@@ -35,7 +35,7 @@ type CollectionState = {|
   tree: Object,
   draftData: {
     tree: ?Object,
-    actions: ?(Action[])
+    edits: ?(Edit[])
   }
 |};
 
@@ -46,14 +46,14 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
       tree: this.props.tree,
       draftData: {
         tree: null,
-        actions: null
+        edits: null
       }
     };
   }
 
   static defaultProps = {
     dropMappers: {},
-    onErrors: () => {}
+    onError: (error: string) => console.log(error)
   };
 
   static getDerivedStateFromProps = ({ tree }: CollectionProps) => ({
@@ -64,7 +64,7 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
     this.setState({
       draftData: {
         tree: null,
-        actions: null
+        edits: null
       }
     });
   };
@@ -115,18 +115,18 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
     dataTransfer.setData(INTERNAL_TRANSFER_TYPE, dropSpecString);
 
     try {
-      const [tree, actions] = remove(
+      const [tree, edits] = remove(
         this.state.tree,
         this.props.schema,
         null,
         path,
-        data.id
+        data
       );
 
       this.setState({
         draftData: {
           tree,
-          actions
+          edits
         }
       });
     } catch (error) {
@@ -164,7 +164,7 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
 
     try {
       // this could probably just be draft tree
-      const [tree, actions] = insert(
+      const [tree, edits] = insert(
         this.state.draftData.tree || this.state.tree,
         this.props.schema,
         sourcePath,
@@ -174,19 +174,19 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
 
       // dedupe
 
-      const combinedActions = mergeMoves([
-        ...(this.state.draftData.actions || []),
-        ...actions
+      const combinedEdits = mergeMoves([
+        ...(this.state.draftData.edits || []),
+        ...edits
       ]);
 
       this.setState({
         draftData: {
           tree: null,
-          actions: null
+          edits: null
         }
       });
 
-      this.props.onChange(tree, combinedActions);
+      this.props.onChange(tree, combinedEdits);
     } catch (error) {
       return error.message;
     }

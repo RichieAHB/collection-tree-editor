@@ -16,7 +16,7 @@ type NodeProps = {
 
 const Node = ({ node, path, attach, detach, schema }: NodeProps) => {
   const { childrenKey, type, renderer, childType: childSchema } = schema;
-  const { type: childType, idKey: childIdKey } = schema;
+  const { type: childType, idKey: childIdKey } = childSchema || {};
 
   const canDrag = path.length > 0;
   const canDrop = !!childrenKey;

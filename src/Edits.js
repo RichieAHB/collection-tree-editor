@@ -1,23 +1,24 @@
 // @flow
 import { type ParentSpec } from './utils/TreeUtils';
 
-const ActionTypes = {
+const EditTypes = {
   INSERT: 'INSERT',
   REMOVE: 'REMOVE',
   MOVE: 'MOVE'
 };
 
-type InsertAction = {|
+type InsertEdit = {|
   type: 'INSERT',
   payload: {
     id: string,
     data: any,
     type: string,
-    parents: ParentSpec[]
+    parents: ParentSpec[],
+    index: number
   }
 |};
 
-type RemoveAction = {|
+type RemoveEdit = {|
   type: 'REMOVE',
   payload: {
     id: string,
@@ -26,30 +27,33 @@ type RemoveAction = {|
   }
 |};
 
-type MoveAction = {|
+type MoveEdit = {|
   type: 'MOVE',
   payload: {
     id: string,
     type: string,
+    index: number,
     oldParents: ParentSpec[],
     newParents: ParentSpec[]
   }
 |};
 
-type Action = InsertAction | RemoveAction | MoveAction;
+type Edit = InsertEdit | RemoveEdit | MoveEdit;
 
 const insert = (
   id: string,
   type: string,
   data: any,
-  parents: ParentSpec[]
-): InsertAction => ({
-  type: ActionTypes.INSERT,
+  parents: ParentSpec[],
+  index: number
+): InsertEdit => ({
+  type: EditTypes.INSERT,
   payload: {
     id,
     data,
     type,
-    parents
+    parents,
+    index
   }
 });
 
@@ -57,8 +61,8 @@ const remove = (
   id: string,
   type: string,
   parents: ParentSpec[]
-): RemoveAction => ({
-  type: ActionTypes.REMOVE,
+): RemoveEdit => ({
+  type: EditTypes.REMOVE,
   payload: {
     id,
     type,
@@ -69,17 +73,19 @@ const remove = (
 const move = (
   id: string,
   type: string,
+  index: number,
   oldParents: ParentSpec[],
   newParents: ParentSpec[]
-): MoveAction => ({
-  type: ActionTypes.MOVE,
+): MoveEdit => ({
+  type: EditTypes.MOVE,
   payload: {
     id,
     type,
+    index,
     oldParents,
     newParents
   }
 });
 
-export { insert, remove, move, ActionTypes };
-export type { Action };
+export { insert, remove, move, EditTypes };
+export type { InsertEdit, RemoveEdit, MoveEdit, Edit };
