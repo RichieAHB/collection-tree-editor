@@ -14,6 +14,8 @@ type DropSpec = {
   data: any,
   type: string,
   path?: Path
+} | {
+  error: ?string
 };
 
 type DropMapper = string => DropSpec;
