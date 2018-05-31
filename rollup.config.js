@@ -1,17 +1,23 @@
 import babel from 'rollup-plugin-babel';
+import mkdirp from 'mkdirp';
 import fs from 'fs';
+import path from 'path';
 
 const flowStr = entry =>
   `// @flow
 
 export * from '${entry}';
-export { default } from '${entry}';
 `;
 
-const addFlowDefs = path => ({
+const addFlowDefs = flowPath => ({
   transformBundle: (_, id) => {
-    // const path =
-    fs.writeFileSync(`${id.file}.flow`, flowStr(path));
+    const file = `${id.file}.flow`;
+    mkdirp(path.dirname(file), err => {
+      if (err) {
+        throw `Couldn't write file`
+      }
+      fs.writeFileSync(file, flowStr(flowPath));
+    });
   }
 });
 

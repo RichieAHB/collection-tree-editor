@@ -22,6 +22,7 @@
     "enzyme-adapter-react-16": "^1.1.1",
     "flow-bin": "^0.72.0",
     "flow-typed": "^2.4.0",
+    "mkdirp": "^0.5.1",
     "rollup": "^0.59.4",
     "rollup-plugin-babel": "^4.0.0-beta.4"
   },
