@@ -33,4 +33,4 @@ export default [
     plugins: [babel(), addFlowDefs('../src/index.js')],
     external: ['react', 'lodash/fp/get', 'lodash/fp/set']
   },
-};
+];
