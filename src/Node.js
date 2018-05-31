@@ -1,6 +1,6 @@
 // @flow
 
-import * as React from 'react';
+import React from 'react';
 import { pathSpec } from './utils/PathUtils';
 import get from 'lodash/fp/get';
 import { type Path } from './utils/PathUtils';

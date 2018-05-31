@@ -1,6 +1,6 @@
 // @flow
 
-import * as React from 'react';
+import React from 'react';
 import * as Edits from '../Edits';
 import { type Edit } from '../Edits';
 import {

@@ -1,4 +1,6 @@
 import babel from 'rollup-plugin-babel';
+import resolve from 'rollup-plugin-node-resolve';
+import commonjs from 'rollup-plugin-commonjs';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import path from 'path';
@@ -14,7 +16,7 @@ const addFlowDefs = flowPath => ({
     const file = `${id.file}.flow`;
     mkdirp(path.dirname(file), err => {
       if (err) {
-        throw `Couldn't write file`
+        throw `Couldn't write file`;
       }
       fs.writeFileSync(file, flowStr(flowPath));
     });
@@ -30,5 +32,5 @@ export default [
     },
     plugins: [babel(), addFlowDefs('../src/index.js')],
     external: ['react', 'lodash/fp/get', 'lodash/fp/set']
-  }
-];
+  },
+};
