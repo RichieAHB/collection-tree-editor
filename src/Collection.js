@@ -10,15 +10,17 @@ import { mergeMoves } from './utils/EditUtils';
 import { type Edit, type EditType, type EditHandlers } from './Edits';
 import { INTERNAL_TRANSFER_TYPE } from './Constants';
 
-type DropSpec = {
-  data: any,
-  type: string,
-  path?: Path
-} | {
-  error: ?string
-};
+type DropSpec =
+  | {|
+      data: any,
+      type: string,
+      path?: Path
+    |}
+  | {|
+      error: string | true
+    |};
 
-type DropMapper = string => DropSpec;
+type DropMapper = string => Promise<DropSpec>;
 
 type DropMapperMap = {
   [string]: DropMapper
@@ -76,12 +78,13 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
 
   get dropMappers(): DropMapperMap {
     return {
-      [INTERNAL_TRANSFER_TYPE]: (data: string): DropSpec => JSON.parse(data),
+      [INTERNAL_TRANSFER_TYPE]: (data: string) =>
+        Promise.resolve(JSON.parse(data)),
       ...this.props.dropMappers
     };
   }
 
-  async getDropData(e: DragEvent): Promise<DropSpec> {
+  getDropData(e: DragEvent): Promise<DropSpec> {
     const dataTransfer: ?DataTransfer = e.dataTransfer;
 
     if (!dataTransfer || !dataTransfer.getData) {
@@ -144,12 +147,14 @@ class Collection extends React.Component<CollectionProps, CollectionState> {
     let spec;
 
     try {
-      spec = await this.getDropData(e);
+      // this is to fix flow :/
+      // https://github.com/facebook/flow/issues/5294
+      spec = await (await this.getDropData(e));
     } catch (error) {
       return 'error parsing the drag data';
     }
 
-    if (!spec) {
+    if (!spec || spec.error) {
       return 'could not find a way to handle this drag event';
     }
 
