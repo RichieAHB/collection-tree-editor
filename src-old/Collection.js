@@ -28,7 +28,7 @@ type CollectionProps = {
   tree: Object,
   onChange: (tree: Object, edits: Edit[]) => void,
   editHandlers: EditHandlers,
-  onError: string => void,
+  onError: (error: string) => void,
   dedupeTypes: string[]
 };
 
